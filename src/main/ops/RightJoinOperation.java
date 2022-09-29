@@ -27,22 +27,17 @@ public class RightJoinOperation<K, V1, V2> implements JoinOperation<DataRow<K,V1
 
         List<JoinedDataRow<K, V1, V2>> list = new ArrayList<>();
 
-        rightCollection.forEach(dataRow2 -> {
-            boolean[] keyAvailable = {false};
-
-            leftCollection.stream()
-                    .filter(dataRow1 -> dataRow1.getKey() == dataRow2.getKey())
-                    .forEach(result -> {
-                        list.add(new JoinedDataRow<>(dataRow2.getKey(), result.getValue(), dataRow2.getValue()));
-                        keyAvailable[0] = true;
-            });
-
-            if (!keyAvailable[0]) {
-                list.add(new JoinedDataRow<>(dataRow2.getKey(), null, dataRow2.getValue()));
-            }
-        });
+        rightCollection
+                .forEach(rightDataRow -> {
+                    list.add(new JoinedDataRow<>(rightDataRow.getKey(),
+                            leftCollection.stream()
+                                    .filter(leftDataRow -> leftDataRow.getKey() == rightDataRow.getKey())
+                                    .map(DataRow::getValue)
+                                    .findFirst()
+                                    .orElse(null),
+                            rightDataRow.getValue()
+                    ));
+                });
         return list;
     }
-
-
 }

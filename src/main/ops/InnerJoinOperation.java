@@ -25,13 +25,19 @@ public class InnerJoinOperation<K, V1, V2> implements JoinOperation<DataRow<K, V
 
         Collection<JoinedDataRow<K, V1, V2>> result = new ArrayList<>();
 
-        leftCollection.forEach(value1 -> {
-            rightCollection.stream()
-                    .filter(value2 -> value1.getKey() == value2.getKey())
-                    .forEach(value2 ->
-                            result.add(new JoinedDataRow<>(value1.getKey(), value1.getValue(), value2.getValue()))
-                    );
-        });
+            leftCollection.stream()
+                .filter(leftDataRow -> rightCollection.stream()
+                        .anyMatch(rightDataRow -> rightDataRow.getKey() == leftDataRow.getKey()))
+                .forEach(leftDataRow -> {
+                    result.add(new JoinedDataRow<>(leftDataRow.getKey(),
+                            leftDataRow.getValue(),
+                            rightCollection.stream()
+                                    .filter(rightDataRow -> rightDataRow.getKey() == leftDataRow.getKey())
+                                    .map(DataRow::getValue)
+                                    .findFirst()
+                                    .orElse(null)
+                    ));
+                });
         return result;
     }
 }
